@@ -1,0 +1,31 @@
+function myFunction_Backup4() {
+
+  // Get Folder ID
+  var backupFolder = DriveApp.getFolderById("xxxxxx");
+  
+  // Name file
+  var timeZone = Session.getScriptTimeZone();
+  var formattedDate = Utilities.formatDate(new Date(), timeZone, "yyyy-MM-dd' 'HH:mm:ss");
+  var backup_name = "Backup Fast Flow " + formattedDate;
+
+  // Create file
+  var newSpreadsheet = SpreadsheetApp.create(backup_name);
+  // Get ID
+  var newSpreadsheet_ID = newSpreadsheet.getId();
+  // Move to backup folder
+  DriveApp.getFileById(newSpreadsheet_ID).moveTo(backupFolder);
+
+  Logger.log(backup_name);
+  Logger.log(newSpreadsheet_ID);
+
+  var spreadsheet = SpreadsheetApp.openById("xxxxx");
+  var sheet = spreadsheet.getSheetByName("Data");
+
+  // Get the range of data to copy.
+  var range = sheet.getRange("Data!A1:I302");
+  // Copy the range of data.
+  var data = range.getValues();
+  
+  var backup_newfile_ID = SpreadsheetApp.openById(newSpreadsheet_ID);
+  var toRange = backup_newfile_ID.getRange("A1:I302").setValues(data)
+}
