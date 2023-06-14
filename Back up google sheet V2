@@ -1,0 +1,53 @@
+function myFunction_Backup() {
+
+  // Get Folder ID
+  var backupFolder = DriveApp.getFolderById("aaaa"); // A
+  
+  // Name file
+  var timeZone = Session.getScriptTimeZone();
+  var formattedDate = Utilities.formatDate(new Date(), timeZone, "yyyy-MM-dd' 'HH:mm:ss");
+  var backup_name = "Backup Fast Flow " + formattedDate;
+
+  // Create file
+  var newSpreadsheet = SpreadsheetApp.create(backup_name);
+  // Get ID
+  var newSpreadsheet_ID = newSpreadsheet.getId();
+  // Move to backup folder
+  DriveApp.getFileById(newSpreadsheet_ID).moveTo(backupFolder);
+
+  Logger.log(backup_name);
+  Logger.log(newSpreadsheet_ID);
+
+  // Get Google sheet ID
+  var spreadsheet = SpreadsheetApp.openById("xxxx"); // B
+  var sheet = spreadsheet.getSheetByName("Data");
+
+  // Get the range of data to copy.
+  var range = sheet.getRange("Data!A1:U301");
+  // Copy the range of data.
+  var data = range.getValues();
+  
+  var backup_newfile_ID = SpreadsheetApp.openById(newSpreadsheet_ID);
+  var toRange = backup_newfile_ID.getRange("A1:U301").setValues(data)
+
+  myFunction1();
+  myFunction2();
+}
+
+// Delete data from google form
+function myFunction1() {
+  var ss1 = SpreadsheetApp.openById("yyyy"); // C
+  var ws1 = ss1.getSheetByName("sheet1"); // change sheet name
+
+  ws1.deleteRows(3,299);
+}
+
+// Delete data from google sheet
+function myFunction2() {
+  var ss2 = SpreadsheetApp.openById("xxxx"); // B
+  var ws2 = ss2.getSheetByName("Data"); // change sheet name
+
+  ws2.deleteRows(3,299);
+}
+
+ 
