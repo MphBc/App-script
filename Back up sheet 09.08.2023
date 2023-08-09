@@ -1,0 +1,57 @@
+function countRows() {
+// Get the spreadsheet and sheet objects.
+  var spreadsheet = SpreadsheetApp.openById("xxxxxx"); // Your ID spread sheet
+  var sheet = spreadsheet.getSheetByName("xxxxxx"); // Name spread sheet
+
+// Get the range of all cells in the sheet.
+  var range = sheet.getDataRange();
+
+// Count the number of rows that have data.
+  var numRowsWithData = range.getValues().filter(row => row.some(cell => cell !== '')).length;
+
+// If the number of rows with data is equal to 1000, delete rows 3 to 300.
+if (numRowsWithData >= 1000) {
+  transferAndAppendData();
+  }
+ Logger.log(numRowsWithData)
+}
+
+
+function transferAndAppendData() {
+  var sourceSheetName = "Data"; // Replace with the name of your source sheet
+  var destinationSheetName = "Sheet1"; // Replace with the name of your destination sheet
+  
+  var sourceSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sourceSheet = sourceSpreadsheet.getSheetByName(sourceSheetName);
+  
+  var destinationSpreadsheet = SpreadsheetApp.openById("xxxxxx"); // Replace with the ID of your destination spreadsheet
+  var destinationSheet = destinationSpreadsheet.getSheetByName(destinationSheetName);
+  
+  var sourceData = sourceSheet.getRange("Data!A3:I302").getValues(); // Range to copy data
+  
+  var lastRow = destinationSheet.getLastRow();
+  
+  // Append the data from the source sheet to the destination sheet
+  destinationSheet.getRange(lastRow + 1, 1, sourceData.length, sourceData[0].length).setValues(sourceData);
+  
+  Logger.log(sourceData.length + " rows transferred and appended.");
+
+myFunction1();
+myFunction2();
+}
+
+// Delete data from google form
+function myFunction1() {
+  var ss1 = SpreadsheetApp.openById("xxxxxx"); // Your ID spread sheet
+  var ws1 = ss1.getSheetByName("Form responses 1");
+
+  ws1.deleteRows(3,300);
+}
+
+// Delete data from google sheet
+function myFunction2() {
+  var ss2 = SpreadsheetApp.openById("xxxxxx"); // Your ID spread sheet
+  var ws2 = ss2.getSheetByName("Data");
+
+  ws2.deleteRows(3,300);
+}
