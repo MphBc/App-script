@@ -1,0 +1,52 @@
+function deleteRowsWithDateDiff() {
+
+  var sheet1 =  SpreadsheetApp.openById("xxxxxx"); // Google form
+  var data1 = sheet1.getRange("A1:U").getValues();
+
+
+  var sheet2 =  SpreadsheetApp.openById("xxxxxx"); // Google sheet
+  var data2 = sheet2.getRange("A1:U").getValues();
+  var today = new Date();
+
+  var destinationSpreadsheet = SpreadsheetApp.openById("xxxxxx"); // Replace with the ID of your destination spreadsheet
+  var destinationSheet = destinationSpreadsheet.getSheetByName("Backup");
+  
+  var lastRow = destinationSheet.getLastRow();
+
+  // Create an array to store the values of rows to be transferred
+  var valuesToTransfer = [];
+
+  // Loop through each row, skipping the header row
+  for (var i = data1.length - 1; i > 1; i--) {
+    var rowDate = new Date(data1[i][0]); // Assuming date is in the first column (column A)
+    var timeDifference = today.getTime() - rowDate.getTime();
+    var daysDifference = timeDifference / (1000 * 60 * 60 * 24);
+
+    // If the date difference is more than 5 days, delete the row
+    if (daysDifference > 5) {
+
+      valuesToTransfer.push(data2[i]); // Store the values of the row to be transferred
+
+    }
+  }
+  // If there are values to transfer, append them to the target sheet
+  if (valuesToTransfer.length > 0) {
+    destinationSheet.getRange(destinationSheet.getLastRow() + 1, 1, valuesToTransfer.length, valuesToTransfer[0].length).setValues(valuesToTransfer);
+  }
+
+  var rowNum = valuesToTransfer.length
+        
+  sheet1.deleteRows(3,rowNum); 
+  sheet2.deleteRows(3,rowNum);
+
+  Logger.log(valuesToTransfer.length)
+  Logger.log(valuesToTransfer)
+  Logger.log(rowNum)
+
+}
+
+
+
+
+
+
