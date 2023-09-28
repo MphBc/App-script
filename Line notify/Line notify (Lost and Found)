@@ -1,0 +1,66 @@
+function getData()
+{
+  //Get sheet
+  var sheetId = "Your ID sheet"; //ลิ้ง Google Sheet
+  var Sheet = SpreadsheetApp.openById(sheetId).getSheetByName("Line alert"); //ชื่อ Sheet
+  var Found_code = Sheet.getRange("A2:A").getValues();
+
+  var qtyDayForNotify  = 180;  // น้อยกว่า X วัน จะส่ง Notify
+  var dataInCaseNotify = [];  
+  var iStartInRow = 2;
+  
+  // เริ่มอ่านข้อมูล ตั้งแต่ บรรทัด {iStartInRow} คอลัมน์ 5 ระยะเวลา
+  var datas = Sheet.getRange(iStartInRow,5,Sheet.getLastRow(),1).getValues();
+  var status_send = Sheet.getRange(iStartInRow,6,Sheet.getLastRow(),1).getValues();
+
+  for(var i = 0;i < datas.length;i++){
+       // สนใจเฉพาะ วันที่ มากกว่า 0  
+       if (parseInt(datas[i]) >= 180){
+          if (status_send[i] == ""){      
+                                   /// เก็บค่า Row
+             dataInCaseNotify.push(Found_code[i]);
+           }
+       }
+  }
+  Logger.log(dataInCaseNotify);
+
+  // ข้อมูลคนที่เข้าเงื่อนไขต้องส่ง Notify
+  for(var i = 0;i < dataInCaseNotify.length;i++){      
+      //------------------------------------------------------------
+      // อ่านข้อมูลและ ส่ง Line Notify
+      var message = "รายการสินทรัพย์ที่ยังไม่ได้ส่งให้ FM \n" + 
+      "จำนวน : " + dataInCaseNotify.length + " รายการ" +"\n" +
+      "Found Code : \n" + 
+      dataInCaseNotify.join("\n");
+      //------------------------------------------------------------
+      }
+  // Logger.log(message)
+
+  // Replace with your Line Notify access token
+  var lineNotifyToken = "Your Token";
+
+    // Send Line Notify message
+    sendLineNotifyMessage(lineNotifyToken, message);
+}
+
+
+
+function sendLineNotifyMessage(token, message) {
+  var url = "https://notify-api.line.me/api/notify";
+  var headers = {
+    "Authorization": "Bearer " + token,
+  };
+  var payload = {
+    "message": message,
+  };
+
+  var options = {
+    "method": "post",
+    "headers": headers,
+    "payload": payload,
+  };
+
+  var response = UrlFetchApp.fetch(url, options);
+  Logger.log(response.getContentText());
+}
+
