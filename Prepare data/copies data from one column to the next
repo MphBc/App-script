@@ -1,0 +1,49 @@
+function copyData() {
+  var sheet = SpreadsheetApp.openById("xxxxxx"); // Google sheet
+  var data_sheet1 = sheet.getSheetByName("data request");
+  var sheet = data_sheet1;
+  var lastRow = sheet.getLastRow(); // Get the last row with data
+  
+  // Loop through each row and copy values starting from row 3
+  for (var i = 3; i <= lastRow; i++) { // Change starting row to 3
+    var fValue = sheet.getRange(i, 6).getValue(); // Column F (6)
+    if (fValue) {
+      sheet.getRange(i, 7).setValue(fValue); // Column G (7)
+    }
+
+    var hValue = sheet.getRange(i, 8).getValue(); // Column H (8)
+    if (hValue) {
+      sheet.getRange(i, 9).setValue(hValue); // Column T (20)
+    }
+
+    var jValue = sheet.getRange(i, 10).getValue(); // Column J (10)
+    if (jValue) {
+      sheet.getRange(i, 11).setValue(jValue); // Column K (11)
+    }
+
+    var lValue = sheet.getRange(i, 12).getValue(); // Column L (12)
+    if (lValue) {
+      sheet.getRange(i, 13).setValue(lValue); // Column M (13)
+    }
+
+    var nValue = sheet.getRange(i, 14).getValue(); // Column N (14)
+    if (nValue) {
+      sheet.getRange(i, 15).setValue(nValue); // Column O (15)
+    }
+
+    var pValue = sheet.getRange(i, 16).getValue(); // Column P (16)
+    if (pValue) {
+      sheet.getRange(i, 17).setValue(pValue); // Column Q (17)
+    }
+
+    var rValue = sheet.getRange(i, 18).getValue(); // Column R (18)
+    if (rValue) {
+      sheet.getRange(i, 19).setValue(rValue); // Column S (19)
+    }
+
+    var tValue = sheet.getRange(i, 20).getValue(); // Column T (20)
+    if (tValue) {
+      sheet.getRange(i, 21).setValue(tValue); // Column U (21)
+    }
+  }
+}
