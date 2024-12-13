@@ -1,6 +1,6 @@
 function deleteRowsWithStatusCheck() {
   try {
-    var sheet1 = SpreadsheetApp.openById("1NoEqRRy5EIPLJ_5fDqoM-BaDngCxjn5a2CHp-InTGxQ"); // Google sheet
+    var sheet1 = SpreadsheetApp.openById("xxxxxx"); // Google sheet
     var data_sheet1 = sheet1.getSheetByName("data request");
     var data1 = data_sheet1.getRange("A1:U").getValues();
 
