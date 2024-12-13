@@ -1,0 +1,42 @@
+function deleteRowsWithStatusCheck() {
+  try {
+    var sheet1 = SpreadsheetApp.openById("1NoEqRRy5EIPLJ_5fDqoM-BaDngCxjn5a2CHp-InTGxQ"); // Google sheet
+    var data_sheet1 = sheet1.getSheetByName("data request");
+    var data1 = data_sheet1.getRange("A1:U").getValues();
+
+    var destinationSpreadsheet = SpreadsheetApp.openById("xxxxxx");
+    var destinationSheet = destinationSpreadsheet.getSheetByName("Backup");
+    
+    var valuesToTransfer = []; 
+ 
+    // Loop through each row, starting from row 3 (index 2) 
+    for (var i = 2; i < data1.length; i++) { 
+      var status = data1[i][4]; // Assuming column E is the 5th column (index 4) 
+ 
+      // Check if column E has the value 'PASS' 
+      if (status === 'PASS') { 
+        valuesToTransfer.push(data1[i]); // Store the values of the row to be transferred 
+ 
+        // Clear specific columns for rows with 'PASS' status
+        var columnsToClear = [7, 9, 11, 13, 15, 17, 19, 21]; // Column indices for G, I, K, M, O, Q, S, U (1-based) 
+        columnsToClear.forEach(function(col) {
+          data_sheet1.getRange(i + 1, col, 1, 1).clear(); 
+        });
+      } 
+    } 
+ 
+    // If there are values to transfer, append them to the target sheet 
+    if (valuesToTransfer.length > 0) { 
+      var startRow = destinationSheet.getLastRow() + 1; // Determine where to start adding data 
+      destinationSheet.getRange(startRow, 1, valuesToTransfer.length, valuesToTransfer[0].length).setValues(valuesToTransfer); 
+ 
+      // Sort the destination sheet based on the date column (column 4) 
+      var lastRow = destinationSheet.getLastRow(); 
+      destinationSheet.getRange(2, 1, lastRow - 1, destinationSheet.getLastColumn()).sort({column: 4, ascending: true}); 
+    } else { 
+      Logger.log("No values to transfer."); 
+    } 
+  } catch (e) { 
+    Logger.log("Error: " + e.message); 
+  } 
+}
