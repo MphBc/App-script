@@ -1,0 +1,102 @@
+var access_token = "xxxxx"; // Channel access token (long-lived)
+var ssId = "xxxxx"; // Google Sheets ID
+var ss = SpreadsheetApp.openById(ssId);
+var datalog = ss.getSheetByName("xxxxx"); // Sheet name
+var recipientEmail = "xxxxx"; // Replace with your email address
+
+function doPost(e) {
+  var json = JSON.parse(e.postData.contents);
+  for (var i = 0; i < json.events.length; i++) {
+    var event = json.events[i];
+    switch (event.type) {
+      case 'message':
+        if (event.message.type === 'file') {
+          uploadFile(event);
+        } else if (event.message.type === 'image') {
+          uploadImage(event);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+function uploadFile(event) {
+  var messageId = event.message.id;
+  var lineApiUrl = `https://api-data.line.me/v2/bot/message/${messageId}/content`;
+
+  var response = UrlFetchApp.fetch(lineApiUrl, {
+    method: 'get',
+    headers: {
+      Authorization: `Bearer ${access_token}`
+    }
+  });
+
+  if (response.getResponseCode() === 200) {
+    var fileBlob = response.getBlob();
+    fileBlob.setName(event.message.fileName);
+
+    const folderId = "xxxxx"; // Google Drive files folder ID
+    const folder = DriveApp.getFolderById(folderId);
+
+    const uploadedFile = folder.createFile(fileBlob);
+    Logger.log(`File uploaded: ${uploadedFile.getUrl()}`);
+
+    datalog.appendRow([
+      new Date(),
+      event.source.userId,
+      event.message.fileName,
+      event.message.fileSize,
+      uploadedFile.getUrl()
+    ]);
+
+    // Send email notification with attachment
+    sendEmailNotification("File Received", event.message.fileName, fileBlob);
+  } else {
+    Logger.log(`Failed to fetch file: ${response.getResponseCode()}`);
+  }
+}
+
+function uploadImage(event) {
+  var messageId = event.message.id;
+  var lineApiUrl = `https://api-data.line.me/v2/bot/message/${messageId}/content`;
+
+  var response = UrlFetchApp.fetch(lineApiUrl, {
+    method: 'get',
+    headers: {
+      Authorization: `Bearer ${access_token}`
+    }
+  });
+
+  if (response.getResponseCode() === 200) {
+    var imageBlob = response.getBlob();
+    imageBlob.setName(`Image_${new Date().toISOString()}.jpg`);
+
+    const folderId = "xxxxx"; // Google Drive images folder ID
+    const folder = DriveApp.getFolderById(folderId);
+
+    const uploadedImage = folder.createFile(imageBlob);
+    Logger.log(`Image uploaded: ${uploadedImage.getUrl()}`);
+
+    datalog.appendRow([
+      new Date(),
+      event.source.userId,
+      `Image_${new Date().toISOString()}.jpg`,
+      null, // File size is not provided in the event for images
+      uploadedImage.getUrl()
+    ]);
+
+    // Send email notification with attachment
+    sendEmailNotification("Image Received", `Image_${new Date().toISOString()}.jpg`, imageBlob);
+  } else {
+    Logger.log(`Failed to fetch image: ${response.getResponseCode()}`);
+  }
+}
+
+function sendEmailNotification(subject, fileName, fileBlob) {
+  var body = `You have received a new file.\n\nFile Name: ${fileName}`;
+  GmailApp.sendEmail(recipientEmail, subject, body, {
+    attachments: [fileBlob]
+  });
+}
