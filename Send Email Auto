@@ -1,0 +1,115 @@
+function KeyFolder() {
+  var folderId = 'xxxxx'; // Replace with your folder ID
+  var sheetName = 'File List'; // Replace with your target sheet name
+  
+  listFilesInFolder(folderId, sheetName);
+  loopAndSendEmailsWithAttachments();
+}
+
+//-----------------------------------------------------------------------//
+
+function listFilesInFolder(folderId, sheetName) {
+  // Get the folder
+  var folder = DriveApp.getFolderById(folderId);
+  
+  // Get the files in the folder
+  var files = folder.getFiles();
+
+  // Access the target sheet
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  if (!sheet) {
+    Logger.log("Sheet not found: " + sheetName);
+    return;
+  }
+
+  // Clear only columns A and B
+  sheet.getRange('A:B').clearContent();
+
+  // Add headers
+  sheet.getRange(1, 1).setValue("File Name");
+  sheet.getRange(1, 2).setValue("File ID");
+
+  // Write file names and IDs into the sheet
+  var row = 2; // Start from the second row
+  while (files.hasNext()) {
+    var file = files.next();
+    sheet.getRange(row, 1).setValue(file.getName()); // File name in column A
+    sheet.getRange(row, 2).setValue(file.getId());   // File ID in column B
+    row++;
+  }
+
+  Logger.log("Files listed in sheet: " + sheetName);
+}
+
+//-----------------------------------------------------------------------//
+
+function loopAndSendEmailsWithAttachments() {
+  // Sheet and range setup
+  var sheetName = "File List"; // Replace with your sheet name
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  if (!sheet) {
+    Logger.log("Sheet not found: " + sheetName);
+    return;
+  }
+
+  // Get the last row with data in column A
+  var lastRow = sheet.getRange("A1:A").getValues().filter(String).length;
+
+  // Check if there is data beyond the header
+  if (lastRow <= 1) {
+    Logger.log("No data found in the sheet.");
+    return;
+  }
+
+  // Loop through each row starting from the second row (index 1)
+  for (var i = 2; i <= lastRow; i++) { // Start from row 2
+    var fileId = sheet.getRange(i, 2).getValue(); // File ID from column B
+    var vendorName = sheet.getRange(i, 3).getValue(); // VendorName from column C
+    var email = sheet.getRange(i, 4).getValue(); // Email address from column D
+
+    // Validate data
+    if (!fileId || !email) {
+      Logger.log(`Skipping row ${i}: Missing File ID or Email`);
+      continue;
+    }
+
+    try {
+      // Get the file from Drive
+      var file = DriveApp.getFileById(fileId);
+      var fileName = file.getName();
+
+      // Check if the file is an Excel file (.xlsx or .xls)
+      var mimeType = file.getMimeType();
+      if (mimeType !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
+          mimeType !== "application/vnd.ms-excel") {
+        Logger.log(`Skipping row ${i}: File (${fileName}) is not an Excel file.`);
+        continue;
+      }
+
+      // Split the email addresses by semicolon and trim any extra spaces
+      var emailList = email.split(";").map(function (e) {
+        return e.trim();
+      });
+
+      // Email content
+      var subject = `แจ้งเตือน ตรวจสอบ ใบสั่งซื้อ เนื่องจากครบกำหนด ส่งมอบ ${vendorName}`;
+      var body =
+          "<p style='font-size: 24px; color: #344CB7;'>เรียน เจ้าหน้าที่ ที่เกี่ยวข้อง : <b><span style='color: black;'>" + vendorName + "</span></b></p>" +
+          "<p style='font-size: 24px;'><span style='background-color: yellow; color: red;'>เนื่องจากใบสั่งซื้อได้ครบกำหนดส่งมอบแล้ว</span></p>" +
+          "<p style='font-size: 24px;'><span style='background-color: yellow; color: red;'>ตรวจสอบได้ที่ตามไฟล์แนบครับ</span></p>";
+
+      // Send the email with the file as an attachment
+      MailApp.sendEmail({
+        to: emailList.join(","), // Join the email list with commas
+        subject: subject,
+        htmlBody: body, // Use HTML body for formatting
+        attachments: [file.getBlob()] // Attach the file in its original format
+      });
+
+      Logger.log(`Email sent to ${emailList.join(", ")} for file: ${fileName}`);
+
+    } catch (e) {
+      Logger.log(`Error processing row ${i}: ${e.message}`);
+    }
+  }
+}
