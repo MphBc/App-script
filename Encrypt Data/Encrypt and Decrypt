@@ -1,0 +1,139 @@
+var checkKey = 'YOUR KEY';
+
+function checkrun() {
+  var dataSheetId = "xxxxx"; // Data sheet ID  
+  var statusSheetName = "Log"; // Name of the status sheet;
+
+  var spreadsheet = SpreadsheetApp.openById(dataSheetId);
+  var statusSheet = spreadsheet.getSheetByName(statusSheetName);
+  
+  if (!statusSheet) throw new Error("Status sheet '" + statusSheetName + "' not found.");
+
+  var lastRow = statusSheet.getLastRow();
+  var lastStatus = lastRow > 0 ? statusSheet.getRange(lastRow, 1).getValue() : null;
+
+  if (lastStatus !== "Encrypt") {
+    encryptAndReplaceData2(); // Run encryption only if last status is NOT "Encrypt"
+  }
+}
+
+
+function encryptAndReplaceData2() { 
+  var key = checkKey; // Your secret key
+  var dataSheetId = "xxxxx"; // Data sheet ID 
+  var dataSheetName = "Stroke"; // Name of the source data sheet
+  var statusSheetName = "Log"; // Name of the status sheet
+
+  try {
+    var spreadsheet = SpreadsheetApp.openById(dataSheetId);
+
+    var dataSheet = spreadsheet.getSheetByName(dataSheetName);
+    if (!dataSheet) throw new Error("Data sheet '" + dataSheetName + "' not found.");
+
+    var statusSheet = spreadsheet.getSheetByName(statusSheetName);
+    if (!statusSheet) throw new Error("Status sheet '" + statusSheetName + "' not found.");
+
+    var encryptionColumnIndex = 4;
+
+    var data = dataSheet.getRange(2, 1, dataSheet.getLastRow() - 1, dataSheet.getLastColumn()).getValues();
+
+    var cipher = new cCryptoGS.Cipher(key, 'aes');
+
+    var encryptedData = data.map(row => {
+      while (row.length < encryptionColumnIndex) row.push(null);
+
+      var isEncrypted = row[encryptionColumnIndex - 1] === "Encrypted";
+
+      if (!isEncrypted) {
+        var encryptedRow = row.map(value => 
+          value !== null && value !== "" ? cipher.encrypt(value.toString()) : value
+        );
+        return encryptedRow;
+      } else {
+        row[encryptionColumnIndex - 1] = ""; // Remove "Encrypted" text
+        return row;
+      }
+    });
+
+    if (dataSheet.getLastColumn() < encryptionColumnIndex) {
+      dataSheet.insertColumnsAfter(dataSheet.getLastColumn(), encryptionColumnIndex - dataSheet.getLastColumn());
+    }
+
+    dataSheet.getRange(2, 1, encryptedData.length, encryptedData[0].length)
+      .setValues(encryptedData);
+
+    var lastRow = statusSheet.getLastRow();
+    var lastStatus = lastRow > 0 ? statusSheet.getRange(lastRow, 1).getValue() : null;
+
+    if (lastStatus !== "Encrypt") {
+      var nextRow = lastRow + 1;
+      statusSheet.getRange(nextRow, 1).setValue("Encrypt");
+      statusSheet.getRange(nextRow, 2).setValue(new Date());
+    }
+
+    Logger.log("Data encrypted and 'Encrypted' stamp removed.");
+  } catch (error) {
+    Logger.log("Error in encryptAndReplaceData2: " + error.toString());
+    throw error;
+  }
+}
+
+
+//-------------------------------------------------------------------------------------------------------------//
+
+function decryptData2() {
+  var key = checkKey; // Your secret key
+  var dataSheetId = "xxxxx"; // Data sheet ID  
+  var dataSheetName = "Stroke"; // Name of the source data sheet
+  var statusSheetName = "Log"; // Name of the status sheet
+
+  try {
+    var spreadsheet = SpreadsheetApp.openById(dataSheetId);
+
+    var dataSheet = spreadsheet.getSheetByName(dataSheetName);
+    if (!dataSheet) throw new Error("Data sheet '" + dataSheetName + "' not found.");
+
+    var statusSheet = spreadsheet.getSheetByName(statusSheetName);
+    if (!statusSheet) throw new Error("Status sheet '" + statusSheetName + "' not found.");
+
+    var encryptionColumnIndex = 4;
+
+    var encryptedData = dataSheet.getRange(2, 1, dataSheet.getLastRow() - 1, dataSheet.getLastColumn()).getValues();
+
+    var cipher = new cCryptoGS.Cipher(key, 'aes');
+
+    var decryptedData = encryptedData.map(row => {
+      while (row.length < encryptionColumnIndex) row.push(null);
+
+      var decryptedRow = row.map(value => 
+        value !== null && value !== "" ? cipher.decrypt(value.toString()) : value
+      );
+
+      return decryptedRow;
+    });
+
+    if (dataSheet.getLastColumn() < encryptionColumnIndex) {
+      dataSheet.insertColumnsAfter(dataSheet.getLastColumn(), encryptionColumnIndex - dataSheet.getLastColumn());
+    }
+
+    dataSheet.getRange(2, 1, decryptedData.length, decryptedData[0].length)
+      .setValues(decryptedData);
+
+    var lastRow = statusSheet.getLastRow();
+    var lastStatus = lastRow > 0 ? statusSheet.getRange(lastRow, 1).getValue() : null;
+
+    if (lastStatus !== "Decrypt") {
+      var nextRow = lastRow + 1;
+      statusSheet.getRange(nextRow, 1).setValue("Decrypt");
+      statusSheet.getRange(nextRow, 2).setValue(new Date());
+    }
+
+    Logger.log("Data decrypted successfully.");
+  } catch (error) {
+    Logger.log("Error in decryptData2: " + error.toString());
+    throw error;
+  }
+}
+
+
+
