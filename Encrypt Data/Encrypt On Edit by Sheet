@@ -1,0 +1,111 @@
+var checkKey = 'Stroke';
+
+function onEdit(e) {
+  var sheet = e.source.getActiveSheet();
+  var sheetName = sheet.getName();
+  var allowedSheets = ["Stroke", "MRT", "CodeA", "STEMI", "All"];
+
+  if (allowedSheets.includes(sheetName)) {
+    encryptAndReplaceData2(sheetName);
+  }
+}
+
+function encryptAndReplaceData2(sheetName) { 
+  var key = checkKey;
+  var dataSheetId = "xxxxx"; // Sheet ID
+  var statusSheetName = "Log";
+
+  try {
+    var spreadsheet = SpreadsheetApp.openById(dataSheetId);
+    var dataSheet = spreadsheet.getSheetByName(sheetName);
+    if (!dataSheet) throw new Error("Data sheet '" + sheetName + "' not found.");
+
+    var encryptColumns;
+    var statusColumn;
+
+    if (sheetName === "MRT") {
+      encryptColumns = [11, 13, 15, 16, 17, 21]; // K, M, O, P, Q, U
+      statusColumn = 24; // Column X
+    } else if (sheetName === "CodeA") {
+      encryptColumns = [11, 15, 18, 20, 21, 22, 26]; // K, O, R, T, U, V, Z
+      statusColumn = 29; // Column AC
+    } else if (sheetName === "STEMI") {
+      encryptColumns = [11, 16, 22]; // K, P, V
+      statusColumn = 25; // Column Y
+    } else if (sheetName === "All") {
+      encryptColumns = [11, 15]; // K, O
+      statusColumn = 29; // Column AC
+    } else if (sheetName === "Stroke") {
+      encryptColumns = [4, 5, 13, 17, 22, 27, 32, 37, 42, 47]; // D, E, M, Q, V, AA, AF, AK, AP, AU
+      statusColumn = 50; // Column AX
+    } else {
+      return;
+    }
+
+    var lastRow = dataSheet.getLastRow();
+    var columnAData = dataSheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    var cipher = new cCryptoGS.Cipher(key, 'aes');
+    var statusData = dataSheet.getRange(2, statusColumn, lastRow - 1, 1).getValues();
+    var statusUpdates = [];
+
+    encryptColumns.forEach(function (col) {
+      var data = dataSheet.getRange(2, col, lastRow - 1, 1).getValues();
+      var encryptedData = data.map((row, i) => columnAData[i][0] !== "" && statusData[i][0] !== "Encrypt" ? [cipher.encrypt(row[0].toString())] : row);
+      dataSheet.getRange(2, col, encryptedData.length, 1).setValues(encryptedData);
+    });
+
+    for (var i = 0; i < lastRow - 1; i++) {
+      if (columnAData[i][0] !== "" && statusData[i][0] !== "Encrypt") {
+        statusUpdates.push(["Encrypt"]);
+      } else {
+        statusUpdates.push([statusData[i][0]]);
+      }
+    }
+
+    dataSheet.getRange(2, statusColumn, statusUpdates.length, 1).setValues(statusUpdates);
+  } catch (error) {
+    Logger.log("Error in encryptAndReplaceData2: " + error.toString());
+    throw error;
+  }
+}
+
+
+function decryptStroke() { decryptSheet("Stroke", [4, 5, 13, 17, 22, 27, 32, 37, 42, 47], 50); }
+function decryptMRT() { decryptSheet("MRT", [11, 13, 15, 16, 17, 21], 24); }
+function decryptCodeA() { decryptSheet("CodeA", [11, 15, 18, 20, 21, 22, 26], 29); }
+function decryptSTEMI() { decryptSheet("STEMI", [11, 16, 22], 25); }
+function decryptAll() { decryptSheet("All", [11, 15], 29); }
+
+function decryptSheet(sheetName, decryptColumns, statusColumn) {
+  var key = checkKey;
+  var dataSheetId = "xxxxx"; // Sheet ID
+  try {
+    var spreadsheet = SpreadsheetApp.openById(dataSheetId);
+    var dataSheet = spreadsheet.getSheetByName(sheetName);
+    if (!dataSheet) throw new Error("Data sheet '" + sheetName + "' not found.");
+
+    var lastRow = dataSheet.getLastRow();
+    var cipher = new cCryptoGS.Cipher(key, 'aes');
+    var statusData = dataSheet.getRange(2, statusColumn, lastRow - 1, 1).getValues();
+    var statusUpdates = [];
+
+    decryptColumns.forEach(function (col) {
+      var data = dataSheet.getRange(2, col, lastRow - 1, 1).getValues();
+      var decryptedData = data.map((row, i) => statusData[i][0] === "Encrypt" ? [cipher.decrypt(row[0].toString())] : row);
+      dataSheet.getRange(2, col, decryptedData.length, 1).setValues(decryptedData);
+    });
+
+    for (var i = 0; i < lastRow - 1; i++) {
+      if (statusData[i][0] === "Encrypt") {
+        statusUpdates.push([""]);
+      } else {
+        statusUpdates.push([statusData[i][0]]);
+      }
+    }
+
+    dataSheet.getRange(2, statusColumn, statusUpdates.length, 1).setValues(statusUpdates);
+  } catch (error) {
+    Logger.log("Error in decryptSheet: " + error.toString());
+    throw error;
+  }
+}
