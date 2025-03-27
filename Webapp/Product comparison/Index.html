@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Value Comparison</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4CAF50;
+      --secondary-color: #45a049;
+      --background-color: #f5f5f5;
+      --card-background: #ffffff;
+      --text-color: #333;
+      --remove-color: #f44336;
+      --remove-hover-color: #d32f2f;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    
+    .nav {
+      background-color: #333;
+      overflow: hidden;
+      width: 90%;
+      max-width: 400px;
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      border-radius: 0;
+    }
+    .nav ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      justify-content: center;
+    }
+
+    .nav ul li {
+      flex: none;
+    }
+
+    .nav ul li a {
+      color: white;
+      text-align: center;
+      padding: 14px 20px;
+      display: block;
+      text-decoration: none;
+    }
+
+    .nav ul li a:hover {
+      background-color: #575757;
+    }
+
+    @media screen and (max-width: 600px) {
+      .nav {
+        width: 100%;
+        left: 0;
+        transform: none;
+      }
+
+      .container {
+        margin-top: 70px;
+      }
+    }
+
+    .container {
+      background-color: var(--card-background);
+      border-radius: 16px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      margin-top: 70px; 
+      margin-bottom: 16px;
+      width: 90%;
+      max-width: 600px;
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-color);
+      font-weight: 600;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 8px 12px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: var(--secondary-color);
+    }
+
+    .btn-clear {
+      background-color: var(--remove-color);
+      color: white;
+      margin-left: 8px;
+    }
+
+    .btn-clear:hover {
+      background-color: var(--remove-hover-color);
+    }
+
+    .btn-remove {
+      background-color: var(--remove-color);
+      margin-top: 8px;
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+
+    .btn-remove:hover {
+      background-color: var(--remove-hover-color);
+    }
+
+    .product-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .product {
+      background-color: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .best-product {
+      background-color: #fffbcc;
+      border: 2px solid #ffeb3b;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .highlight {
+      font-weight: bold;
+      color: var(--primary-color);
+      font-size: 1.2em;
+    }
+
+    #productList, #bestProduct {
+      display: none;
+    }
+
+    #product-sale-calculator {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 400px;
+      box-sizing: border-box;
+      margin-top: 60px;
+      display: none;
+    }
+
+    #product-sale-calculator h2 {
+      text-align: center;
+      color: #000000;
+      margin-bottom: 20px;
+    }
+
+    #product-sale-calculator label {
+      display: block;
+      margin-top: 10px;
+      color: #000000;
+    }
+
+    #product-sale-calculator input[type="number"],
+    #product-sale-calculator input[type="text"],
+    #product-sale-calculator select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #product-sale-calculator .promotion {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+
+    #product-sale-calculator .promotion-options {
+      display: flex;
+      flex-direction: column;
+      margin-top: 10px;
+    }
+
+    #product-sale-calculator .promotion-options label {
+      margin: 5px 0;
+    }
+
+    #product-sale-calculator button {
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 15px;
+      margin-top: 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 48%;
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.3s ease;
+      margin-right: 4%;
+    }
+
+    #product-sale-calculator button:last-of-type {
+      background-color: #dc3545;
+      margin-right: 0;
+    }
+
+    #product-sale-calculator button:hover {
+      background-color: #45a049;
+    }
+
+    #product-sale-calculator button:last-of-type:hover {
+      background-color: #c82333;
+    }
+
+    #result {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+      color: #333;
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 600px) {
+      #product-sale-calculator {
+        width: 100%;
+        margin: 0;
+        border-radius: 0;
+        padding: 10px;
+      }
+
+      #product-sale-calculator button {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+<nav class="nav">
+    <ul>
+        <li><a href="?page=index" onclick="navigate(event, 'index')" style="color: #98D8EF; font-weight: bold;">Comparison</a></li>
+        <li><a href="?page=index2" onclick="navigate(event, 'index2')" style="color: #FFB22C; font-weight: bold;">Discount</a></li>
+    </ul>
+</nav>
+  <div class="container" id="comparison-container" data-page="comparison" style="display: block;">
+    <h2 style="text-align: center; margin-bottom: 16px;">Product Value Comparison</h2>
+    <div class="input-group">
+      <label for="productName">Product Name</label>
+      <input type="text" id="productName" placeholder="Enter product name" required>
+    </div>
+    <div class="input-group">
+      <label for="productPrice">Price (THB)</label>
+      <input type="number" id="productPrice" placeholder="Total price" min="0" step="0.01" required>
+    </div>
+    <div class="input-group">
+      <label for="productQuantity">Quantity</label>
+      <input type="number" id="productQuantity" placeholder="Number of units" min="1" required>
+    </div>
+    <div class="input-group">
+      <label for="productUnit">Unit</label>
+      <select id="productUnit">
+        <option value="pieces" selected>Pieces</option>
+        <option value="g">Grams (g)</option>
+        <option value="kg">Kilograms (kg)</option>
+        <option value="ml">Milliliters (ml)</option>
+        <option value="L">Liters (L)</option>
+        <option value="cm">Centimeters (cm)</option>
+        <option value="m">Meters (m)</option>
+      </select>
+    </div>
+    <button class="btn" onclick="addProduct()">Add Product</button>
+    <button class="btn btn-clear" onclick="clearAll()">Clear All</button>
+  </div>
+
+  <div id="productList" class="container product-list"></div>
+  <div id="bestProduct" class="container"></div>
+
+  <div class="container" id="product-sale-calculator" data-page="sale-calculator" style="display: none;">
+      <h2 style="text-align: center; margin-bottom: 16px;">Product Sale Calculator</h2>
+      <label for="price" style="font-weight: bold;">Price</label>
+      <input type="number" id="price" placeholder="Enter price" />
+      <label for="discount" style="font-weight: bold;">Discount (%)</label>
+      <input type="number" id="discount" placeholder="Enter discount percentage" />
+
+      <div class="promotion">
+        <label for="promotion">Promotion:</label>
+        <select id="promotion">
+          <option value="none">None</option>
+          <option value="buy1get1">Buy 1 Get 1 Free</option>
+        </select>
+      </div>
+
+      <div id="result"></div>
+      <div style="display: flex; justify-content: center;">
+        <button onclick="calculatePrice()">Calculate</button>
+        <button onclick="clearSaleInputs()" style="background-color: #dc3545; border-color: #dc3545;">Clear</button>
+      </div>
+    </div>
+
+  <script>
+    let products = [];
+    let firstUnit = null;
+  
+    const unitConversion = {
+      kg: 1000,
+      g: 1,
+      L: 1000,
+      ml: 1,
+      m: 100,
+      cm: 1,
+      pieces: 1
+    };
+  
+    const unitGroups = {
+      weight: ['kg', 'g'],
+      volume: ['L', 'ml'],
+      length: ['m', 'cm'],
+      discrete: ['pieces']
+    };
+  
+    function getUnitGroup(unit) {
+      for (const group in unitGroups) {
+        if (unitGroups[group].includes(unit)) {
+          return group;
+        }
+      }
+      return null;
+    }
+  
+    function getBaseUnit(unit) {
+      switch (unit) {
+        case 'kg': return 'g';
+        case 'g': return 'g';
+        case 'L': return 'ml';
+        case 'ml': return 'ml';
+        case 'm': return 'cm';
+        case 'cm': return 'cm';
+        case 'pieces': return 'pieces';
+        default: return unit;
+      }
+    }
+  
+    function convertToBaseUnit(quantity, unit) {
+      return quantity * unitConversion[unit];
+    }
+  
+    function clearInputs() {
+      document.getElementById('productName').value = '';
+      document.getElementById('productPrice').value = '';
+      document.getElementById('productQuantity').value = '';
+      document.getElementById('productUnit').value = 'pieces';
+    }
+  
+    function clearSaleInputs() {
+      document.getElementById("price").value = "";
+      document.getElementById("discount").value = "";
+      document.getElementById("promotion").value = "none";
+      document.getElementById("result").innerHTML = "";
+    }
+  
+    function clearAll() {
+      products = [];
+      firstUnit = null;
+      renderProducts();
+      clearInputs();
+    }
+  
+    function addProduct() {
+      const name = document.getElementById('productName').value.trim();
+      const price = parseFloat(document.getElementById('productPrice').value);
+      const quantity = parseInt(document.getElementById('productQuantity').value);
+      const unit = document.getElementById('productUnit').value;
+  
+      if (!name || isNaN(price) || isNaN(quantity) || price <= 0 || quantity <= 0) {
+        alert('Please fill in all fields correctly.');
+        return;
+      }
+  
+      const currentUnitGroup = getUnitGroup(unit);
+  
+      // Check unit compatibility
+      if (products.length > 0) {
+        const firstUnitGroup = getUnitGroup(firstUnit);
+        if (currentUnitGroup !== firstUnitGroup) {
+          alert(`Unit mismatch! All products must use compatible units: "${firstUnit}" group.`);
+          return;
+        }
+      }
+  
+      // Set the first unit when adding the first product
+      if (products.length === 0) {
+        firstUnit = unit;
+      }
+  
+      // Convert quantity to a base unit for comparison
+      const baseQuantity = convertToBaseUnit(quantity, unit);
+      const baseUnit = getBaseUnit(unit);
+      const pricePerPiece = (price / baseQuantity).toFixed(2);
+      const valueRatio = ((baseQuantity / price) * 100).toFixed(2);
+  
+      products.push({
+        id: Date.now(),
+        name,
+        price,
+        quantity,
+        unit,
+        baseQuantity,
+        baseUnit,
+        pricePerPiece: parseFloat(pricePerPiece),
+        valueRatio: parseFloat(valueRatio)
+      });
+  
+      renderProducts();
+      clearInputs();
+    }
+  
+    function removeProduct(id) {
+      products = products.filter(p => p.id !== id);
+      if (products.length === 0) {
+        firstUnit = null;
+      }
+      renderProducts();
+    }
+  
+    function renderProducts() {
+      const list = document.getElementById('productList');
+      list.innerHTML = '';
+      list.style.display = products.length ? 'block' : 'none';
+  
+      products.forEach(p => {
+        const displayQuantity = p.baseQuantity;
+        const displayUnit = p.baseUnit;
+  
+        list.innerHTML += `
+          <div class="product">
+            <div>
+              <h4>${p.name}</h4>
+              <p>Price: ${p.price.toFixed(2)} THB</p>
+              <p>Quantity: ${displayQuantity} ${displayUnit}</p>
+              <p>Price per ${displayUnit}: ${p.pricePerPiece.toFixed(2)} THB</p>
+            </div>
+            <button class="btn btn-remove" onclick="removeProduct(${p.id})">Remove</button>
+          </div>`;
+      });
+  
+      const best = products.reduce((prev, curr) => curr.valueRatio > prev.valueRatio ? curr : prev, products[0]);
+      const bestContainer = document.getElementById('bestProduct');
+      bestContainer.style.display = products.length > 1 ? 'block' : 'none';
+      if (products.length > 1) {
+        const displayQuantity = best.baseQuantity;
+        const displayUnit = best.baseUnit;
+        bestContainer.innerHTML = `
+          <div class="best-product">
+            <h3>🏆 Best Value: ${best.name}</h3>
+            <p>Price per ${displayUnit}: ${best.pricePerPiece.toFixed(2)} THB</p>
+            <p>Quantity: ${displayQuantity} ${displayUnit}</p>
+          </div>`;
+      }
+    }
+  
+    function calculatePrice() {
+      let price = parseFloat(document.getElementById("price").value);
+      let discount = parseFloat(document.getElementById("discount").value);
+      let promotion = document.getElementById("promotion").value;
+      let finalPrice = price;
+      let priceDifference = 0;
+  
+      if (isNaN(price)) {
+        document.getElementById("result").innerHTML = "Please enter a valid price.";
+        return;
+      }
+      if (isNaN(discount)) {
+        discount = 0;
+      }
+  
+      if (discount > 0) {
+        finalPrice = price - (price * (discount / 100));
+        priceDifference = price - finalPrice;
+      }
+  
+      if (promotion === "buy1get1") {
+        finalPrice = price / 2;
+        priceDifference = price - finalPrice;
+      }
+  
+      if (finalPrice < 0) {
+        finalPrice = 0;
+        priceDifference = price;
+      }
+  
+      let resultText = "<span style='font-size: 24px; color: #28a745;'>Final Price: $" + finalPrice.toFixed(2) + "</span>";
+      resultText += "<br><span style='font-size: 0.9em;'>Difference: $ - " + priceDifference.toFixed(2) + "</span>";
+  
+      document.getElementById("result").innerHTML = resultText;
+    }
+  
+    function navigate(event, page) {
+    event.preventDefault();
+    
+    // Change URL without page reload
+    history.pushState({}, '', `?page=${page}`);
+    
+    // Get references to both page containers
+    const saleCalculatorContainer = document.getElementById('product-sale-calculator');
+    const comparisonContainer = document.getElementById('comparison-container');
+    
+    // Navigation logic
+    if (page === 'index') {
+      // Show Comparison page
+      if (comparisonContainer) comparisonContainer.style.display = 'block';
+      if (saleCalculatorContainer) saleCalculatorContainer.style.display = 'none';
+      
+      // Clear sale calculator inputs and result
+      clearSaleInputs();
+    } else if (page === 'index2') {
+      // Show Sale Calculator page
+      if (comparisonContainer) comparisonContainer.style.display = 'none';
+      if (saleCalculatorContainer) saleCalculatorContainer.style.display = 'block';
+      
+      // Clear comparison inputs and product list
+      clearInputs();
+      products = [];
+      firstUnit = null;
+      renderProducts();
+    }
+  }
+  function clearSaleInputs() {
+  document.getElementById("price").value = "";
+  document.getElementById("discount").value = "";
+  document.getElementById("promotion").value = "none";
+  document.getElementById("result").innerHTML = "";
+  }
+
+  function clearInputs() {
+    document.getElementById('productName').value = '';
+    document.getElementById('productPrice').value = '';
+    document.getElementById('productQuantity').value = '';
+    document.getElementById('productUnit').value = 'pieces';
+  }
+  </script>  
+</body>
+</html>
