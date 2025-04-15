@@ -284,14 +284,84 @@
         margin: 0;
         border-radius: 0;
         padding: 10px;
-      }
+      }}
 
       #product-sale-calculator button {
         width: 100%;
         margin-right: 0;
         margin-bottom: 10px;
       }
+    .input-groupshop {
+        display: flex;
+        margin-bottom: 15px;
+        gap: 10px;
     }
+
+    .input-groupshop input {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .input-groupshop input[type="text"] {
+        flex: 2;
+    }
+
+    .input-groupshop input[type="number"] {
+        flex: 1;
+    }
+
+    .listshopping {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    }
+
+    .listshopping .list-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .totalshopping {
+        margin-top: 20px;
+        font-weight: bold;
+        text-align: right;
+        font-size: 18px;
+    }
+    .input-groupshop button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    .input-groupshop button:hover {
+      background-color: #2980b9;
+    }
+    .clearshop button {
+      background-color: #f60404;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .delete-btn {
+            background-color: #ffa200;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 3px 8px;
+    }
+
+
   </style>
 </head>
 <body>
@@ -299,6 +369,7 @@
     <ul>
         <li><a href="?page=index" onclick="navigate(event, 'index')" style="color: #98D8EF; font-weight: bold;">Comparison</a></li>
         <li><a href="?page=index2" onclick="navigate(event, 'index2')" style="color: #FFB22C; font-weight: bold;">Discount</a></li>
+        <li><a href="?page=index3" onclick="navigate(event, 'index3')" style="color: #2d9e43; font-weight: bold;">Shopping</a></li>
     </ul>
 </nav>
   <div class="container" id="comparison-container" data-page="comparison" style="display: block;">
@@ -353,6 +424,28 @@
       <div style="display: flex; justify-content: center;">
         <button onclick="calculatePrice()">Calculate</button>
         <button onclick="clearSaleInputs()" style="background-color: #dc3545; border-color: #dc3545;">Clear</button>
+      </div>
+    </div>
+
+    <div class="container" id="shopping-calculator" data-page="shopping-cal" style="display: none;">
+      <h2 style="text-align: center; margin-bottom: 16px;">Shopping Calculator</h2>
+        
+      <div class="input-groupshop">
+          <input type="text" id="shoppingProductName" placeholder="Product name" required>
+          <input type="number" id="shoppingProductPrice" placeholder="Price" step="0.01" min="0" required>
+          <button id="addProduct">Add</button>
+      </div>
+      
+      <div class="listshopping" id="ShoppingproductList">
+          <!-- Products will be added here dynamically -->
+      </div>
+      
+      <div class="totalshopping">
+          Total: $<span id="totalAmount">0.00</span>
+      </div>
+      
+      <div class = "clearshop" style="margin-top: 20px; text-align: center;">
+          <button id="clearAll">Clear All</button>
       </div>
     </div>
 
@@ -417,13 +510,30 @@
       document.getElementById("result").innerHTML = "";
     }
   
+    // function clearAll() {
+    //   products = [];
+    //   firstUnit = null;
+    //   renderProducts();
+    //   clearInputs();
+    // }
+
     function clearAll() {
       products = [];
       firstUnit = null;
       renderProducts();
       clearInputs();
+
+      // Explicitly clear and hide the best product container
+      const bestContainer = document.getElementById('bestProduct');
+      bestContainer.style.display = 'none';
+      bestContainer.innerHTML = '';
+
+      // Explicitly clear and hide the product list container
+      const list = document.getElementById('productList');
+      list.style.display = 'none';
+      list.innerHTML = '';
     }
-  
+
     function addProduct() {
       const name = document.getElementById('productName').value.trim();
       const price = parseFloat(document.getElementById('productPrice').value);
@@ -480,43 +590,71 @@
       }
       renderProducts();
     }
-  
+
     function renderProducts() {
-      const list = document.getElementById('productList');
-      list.innerHTML = '';
-      list.style.display = products.length ? 'block' : 'none';
-  
-      products.forEach(p => {
+    const list = document.getElementById('productList');
+    list.innerHTML = '';
+    list.style.display = products.length ? 'block' : 'none';
+
+    // Early return if no products
+    if (products.length === 0) {
+        const bestContainer = document.getElementById('bestProduct');
+        bestContainer.style.display = 'none';
+        bestContainer.innerHTML = '';
+        return;
+    }
+
+    // Render all products
+    products.forEach(p => {
         const displayQuantity = p.baseQuantity;
         const displayUnit = p.baseUnit;
-  
+
         list.innerHTML += `
-          <div class="product">
-            <div>
-              <h4>${p.name}</h4>
-              <p>Price: ${p.price.toFixed(2)} THB</p>
-              <p>Quantity: ${displayQuantity} ${displayUnit}</p>
-              <p>Price per ${displayUnit}: ${p.pricePerPiece.toFixed(2)} THB</p>
-            </div>
-            <button class="btn btn-remove" onclick="removeProduct(${p.id})">Remove</button>
-          </div>`;
-      });
-  
-      const best = products.reduce((prev, curr) => curr.valueRatio > prev.valueRatio ? curr : prev, products[0]);
-      const bestContainer = document.getElementById('bestProduct');
-      bestContainer.style.display = products.length > 1 ? 'block' : 'none';
-      if (products.length > 1) {
-        const displayQuantity = best.baseQuantity;
-        const displayUnit = best.baseUnit;
-        bestContainer.innerHTML = `
-          <div class="best-product">
-            <h3>🏆 Best Value: ${best.name}</h3>
-            <p>Price per ${displayUnit}: ${best.pricePerPiece.toFixed(2)} THB</p>
-            <p>Quantity: ${displayQuantity} ${displayUnit}</p>
-          </div>`;
-      }
+            <div class="product">
+                <div>
+                    <h4>${p.name}</h4>
+                    <p>Price: ${p.price.toFixed(2)} THB</p>
+                    <p>Quantity: ${displayQuantity} ${displayUnit}</p>
+                    <p>Price per ${displayUnit}: ${p.pricePerPiece.toFixed(2)} THB</p>
+                </div>
+                <button class="btn btn-remove" onclick="removeProduct(${p.id})">Remove</button>
+            </div>`;
+    });
+
+    // Calculate the best value product
+    const best = products.reduce((prev, curr) => curr.valueRatio > prev.valueRatio ? curr : prev, products[0]);
+    const maxRatio = best.valueRatio;
+
+    // Find products with the same best value ratio
+    const equalProducts = products.filter(p => p.valueRatio === maxRatio);
+
+    const bestContainer = document.getElementById('bestProduct');
+    bestContainer.style.display = products.length > 1 ? 'block' : 'none';
+
+    if (products.length > 1) {
+        if (equalProducts.length > 1) {
+            // Display when multiple products have equal value
+            bestContainer.innerHTML = `
+                <div class="best-product">
+                    <h3>🏆 Best Value: Multiple products have equal value</h3>
+                    ${equalProducts.map(p => `
+                        <p>${p.name} - Price per ${p.baseUnit}: ${p.pricePerPiece.toFixed(2)} THB, Quantity: ${p.baseQuantity} ${p.baseUnit}</p>
+                    `).join('')}
+                </div>`;
+        } else {
+            // Display the single best value product
+            const displayQuantity = best.baseQuantity;
+            const displayUnit = best.baseUnit;
+            bestContainer.innerHTML = `
+                <div class="best-product">
+                    <h3>🏆 Best Value: ${best.name}</h3>
+                    <p>Price per ${displayUnit}: ${best.pricePerPiece.toFixed(2)} THB</p>
+                    <p>Quantity: ${displayQuantity} ${displayUnit}</p>
+                </div>`;
+        }
     }
-  
+}
+
     function calculatePrice() {
       let price = parseFloat(document.getElementById("price").value);
       let discount = parseFloat(document.getElementById("discount").value);
@@ -562,12 +700,14 @@
     // Get references to both page containers
     const saleCalculatorContainer = document.getElementById('product-sale-calculator');
     const comparisonContainer = document.getElementById('comparison-container');
+    const ShoppingContainer = document.getElementById('shopping-calculator');
     
     // Navigation logic
     if (page === 'index') {
       // Show Comparison page
       if (comparisonContainer) comparisonContainer.style.display = 'block';
       if (saleCalculatorContainer) saleCalculatorContainer.style.display = 'none';
+      if (ShoppingContainer) ShoppingContainer.style.display = 'none';
       
       // Clear sale calculator inputs and result
       clearSaleInputs();
@@ -575,6 +715,7 @@
       // Show Sale Calculator page
       if (comparisonContainer) comparisonContainer.style.display = 'none';
       if (saleCalculatorContainer) saleCalculatorContainer.style.display = 'block';
+      if (ShoppingContainer) ShoppingContainer.style.display = 'none';
       
       // Clear comparison inputs and product list
       clearInputs();
@@ -582,7 +723,13 @@
       firstUnit = null;
       renderProducts();
     }
+    else if (page === 'index3') {
+      // Show Sale Calculator page
+      if (comparisonContainer) comparisonContainer.style.display = 'none';
+      if (saleCalculatorContainer) saleCalculatorContainer.style.display = 'none';
+      if (ShoppingContainer) ShoppingContainer.style.display = 'block';
   }
+}
   function clearSaleInputs() {
   document.getElementById("price").value = "";
   document.getElementById("discount").value = "";
@@ -596,6 +743,122 @@
     document.getElementById('productQuantity').value = '';
     document.getElementById('productUnit').value = 'pieces';
   }
+  
+  // Shopping logic (Page 3)
+    document.addEventListener('DOMContentLoaded', function() {
+            const productNameInput = document.getElementById('shoppingProductName');
+            const productPriceInput = document.getElementById('shoppingProductPrice');
+            const addButton = document.getElementById('addProduct');
+            const ShoppingproductList = document.getElementById('ShoppingproductList');
+            const totalAmount = document.getElementById('totalAmount');
+            const clearAllButton = document.getElementById('clearAll');
+            const saveListButton = document.getElementById('saveList');
+            
+            let products = loadProducts();
+            updateProductList();
+            
+            addButton.addEventListener('click', addProductToList);
+            clearAllButton.addEventListener('click', clearAllProducts);
+            saveListButton.addEventListener('click', saveListToLocal);
+            
+            // Allow adding products with Enter key
+            productPriceInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addProductToList();
+                }
+            });
+            
+            function addProductToList() {
+                const name = productNameInput.value.trim();
+                const price = parseFloat(productPriceInput.value);
+                
+                if (name && !isNaN(price) && price >= 0) {
+                    products.push({
+                        name: name,
+                        price: price
+                    });
+                    
+                    productNameInput.value = '';
+                    productPriceInput.value = '';
+                    productNameInput.focus();
+                    
+                    saveProducts();
+                    updateProductList();
+                } else {
+                    alert('Please enter a valid product name and price.');
+                }
+            }
+            
+            function updateProductList() {
+                ShoppingproductList.innerHTML = '';
+                let total = 0;
+                
+                products.forEach((product, index) => {
+                    const listItem = document.createElement('div');
+                    listItem.className = 'list-item';
+                    
+                    listItem.innerHTML = `
+                        <div>${product.name}</div>
+                        <div>
+                            $${product.price.toFixed(2)}
+                            <button class="delete-btn" data-index="${index}">×</button>
+                        </div>
+                    `;
+                    
+                    ShoppingproductList.appendChild(listItem);
+                    total += product.price;
+                });
+                
+                totalAmount.textContent = total.toFixed(2);
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        products.splice(index, 1);
+                        saveProducts();
+                        updateProductList();
+                    });
+                });
+            }
+            
+            function clearAllProducts() {
+                if (products.length > 0 && confirm('Are you sure you want to clear all items?')) {
+                    products = [];
+                    saveProducts();
+                    updateProductList();
+                }
+            }
+            
+            function saveListToLocal() {
+                // Create a text version of the shopping list
+                let listText = "SHOPPING LIST\n\n";
+                products.forEach(product => {
+                    listText += `${product.name}: $${product.price.toFixed(2)}\n`;
+                });
+                listText += `\nTotal: $${totalAmount.textContent}`;
+                
+                // Create a temporary element to copy text
+                const tempElement = document.createElement('textarea');
+                tempElement.value = listText;
+                document.body.appendChild(tempElement);
+                tempElement.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempElement);
+                
+                alert('Shopping list copied to clipboard!');
+            }
+            
+            function saveProducts() {
+                localStorage.setItem('shoppingProducts', JSON.stringify(products));
+            }
+            
+            function loadProducts() {
+                const savedProducts = localStorage.getItem('shoppingProducts');
+                return savedProducts ? JSON.parse(savedProducts) : [];
+            }
+        });
+
   </script>  
 </body>
 </html>
