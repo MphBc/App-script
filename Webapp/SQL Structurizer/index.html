@@ -148,11 +148,15 @@
           <div class="option-label">Format Type:</div>
           <div class="format-option">
             <input type="radio" id="format-brackets" v-model="formatType" value="brackets" name="format-type">
-            <label for="format-brackets">With Brackets [value],</label>
+            <label for="format-brackets">With Brackets ,[value]</label>
           </div>
           <div class="format-option">
             <input type="radio" id="format-quotes" v-model="formatType" value="quotes" name="format-type">
-            <label for="format-quotes">With Quotes 'value',</label>
+            <label for="format-quotes">With Quotes ,'value'</label>
+          </div>
+          <div class="format-option">
+            <input type="radio" id="format-comma" v-model="formatType" value="comma" name="format-type">
+            <label for="format-comma">With Comma ,value</label>
           </div>
         </div>
         
@@ -219,54 +223,63 @@ Example3"></textarea>
         const prefixText = ref('I.'); // Default prefix text
         
         function formatText() {
-          if (!inputText.value.trim()) {
+        if (!inputText.value.trim()) {
             showNotificationMessage('Please enter some text first');
             return;
-          }
-          
-          // Split the input by newlines and filter empty lines
-          const lines = inputText.value.split('\n').filter(line => line.trim() !== '');
-          
-          // Format each line according to the selected format type and prefix option
-          let formattedLines;
-          if (formatType.value === 'brackets') {
-            // Format with brackets
-            if (usePrefix.value && prefixText.value) {
-              formattedLines = lines.map(line => `${prefixText.value}[${line}],`);
-            } else {
-              formattedLines = lines.map(line => `[${line}],`);
-            }
-          } else if (formatType.value === 'quotes') {
-            // Format with quotes
-            if (usePrefix.value && prefixText.value) {
-              formattedLines = lines.map(line => `${prefixText.value}'${line}',`);
-            } else {
-              formattedLines = lines.map(line => `'${line}',`);
-            }
-          }
-          
-          // Apply the selected output style
-          if (outputStyle.value === 'multiline') {
-            // One item per line
-            formattedText.value = formattedLines.join('\n');
-          } else {
-            // All items in a single line
-            formattedText.value = formattedLines.join(' ');
-          }
         }
         
+        // Split the input by newlines and filter empty lines
+        const lines = inputText.value.split('\n').filter(line => line.trim() !== '');
+
+        if (usePrefix.value && !prefixText.value.trim()) {
+            showNotificationMessage('Please enter a valid prefix');
+            return;
+        }
+
+        // Format each line according to the selected format type and prefix option
+        let formattedLines;
+        if (formatType.value === 'brackets') {
+            formattedLines = lines.map(line => `${usePrefix.value ? prefixText.value : ''},[${line}]`);
+        } else if (formatType.value === 'quotes') {
+            formattedLines = lines.map(line => `${usePrefix.value ? prefixText.value : ''},'${line}'`);
+        } else if (formatType.value === 'comma') {
+            formattedLines = lines.map(line => `${usePrefix.value ? prefixText.value : ''},${line}`);
+        }
+
+        // Apply the selected output style
+        formattedText.value = outputStyle.value === 'multiline' ? formattedLines.join('\n') : formattedLines.join(' ');
+        }
+
+        
         function copyToClipboard() {
-          if (!formattedText.value) return;
-          
-          navigator.clipboard.writeText(formattedText.value)
+        if (!formattedText.value) return;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(formattedText.value)
             .then(() => {
-              showNotificationMessage('Copied to clipboard!');
+                showNotificationMessage('Copied to clipboard!');
             })
             .catch(err => {
-              showNotificationMessage('Failed to copy text');
-              console.error('Failed to copy: ', err);
+                console.error('Failed to copy: ', err);
+                showNotificationMessage('Failed to copy text');
             });
+        } else {
+            // Fallback for older browsers
+            const textarea = document.createElement('textarea');
+            textarea.value = formattedText.value;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+            document.execCommand('copy');
+            showNotificationMessage('Copied to clipboard!');
+            } catch (err) {
+            console.error('Fallback: Failed to copy: ', err);
+            showNotificationMessage('Failed to copy text');
+            }
+            document.body.removeChild(textarea);
         }
+        }
+
         
         function clearAll() {
           inputText.value = '';
