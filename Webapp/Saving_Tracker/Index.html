@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Add icon library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Daily Data Recording</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+    }
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        text-align: center;
+        color: #555;
+    }
+    button {
+        padding: 10px 15px;
+        margin: 10px 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    button.load-btn {
+        background-color: #79D7BE;
+        color: #131010;
+    }
+    button.clear-btn {
+        background-color: #4DA1A9;
+        color: #131010;
+    }
+    button.amazon-btn {
+        background-color: #DE3163;
+        color: #131010;
+    }
+    button.oil-btn {
+        background-color: #FBA518;
+        color: #131010;
+    }
+    button.load-btn2 {
+        background-color: #F9C0AB;
+        color: #131010;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: center;
+    }
+    th {
+        background-color: #f8f9fa;
+    }
+    .header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap; /* Allow wrapping for smaller screens */
+        margin-bottom: 10px;
+    }
+    .header-row h2 {
+        margin: 0;
+        font-size: 20px;
+        flex: 1 1 auto; /* Allow h2 to grow or shrink */
+    }
+    .header-row button {
+        margin-top: 10px; /* Add margin to separate button in small screens */
+        flex: 0 0 auto; /* Prevent button from stretching */
+    }
+
+    /* Responsive design for smaller screens */
+    @media (max-width: 600px) {
+        .header-row {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .header-row h2 {
+            margin-bottom: 10px;
+        }
+    }
+    /*----------- Test form input myself -----------*/
+    button.clear-btn {
+        background-color: #4DA1A9;
+        color: #131010;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .modal-header {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #333;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: bold;
+    }
+    .form-group input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .modal-buttons button {
+        padding: 8px 20px;
+        margin: 0;
+    }
+    .submit-btn {
+        background-color: #4DA1A9;
+        color: white;
+    }
+    .cancel-btn {
+        background-color: #ccc;
+        color: #333;
+    }
+
+</style>
+
+</head>
+<body>
+    <div class="container">
+        <h1>Daily Data Recording</h1>
+        <div class="buttons">
+            <button class="load-btn" id="loadDataBtn" onclick="handleButtonClick(1)">1เที่ยว MRT</button>
+            <button class="clear-btn" id="clearTableBtn" onclick="handleButtonClick(2)">2เที่ยว MRT</button>
+            <button class="amazon-btn" id="amazonBtn" onclick="showInputModal()">รายจ่ายทั่วไป</button>
+            <button class="oil-btn" id="oilBtn" onclick="handleButtonClick(4)">น้ำมัน_300</button>
+        </div>
+        <div class="header-row">
+            <h2>Transaction Table</h2>
+            <button class="load-btn2" id="load" onclick="loadTable()">Load Table</button>
+        </div>
+
+                <!-- Modal for input -->
+        <div id="inputModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">Enter Transaction Details</div>
+                <form id="inputForm">
+                    <div class="form-group">
+                        <label for="expenseInput">จ่าย (Expense):</label>
+                        <input type="number" id="expenseInput" placeholder="Enter amount">
+                    </div>
+                    <div class="form-group">
+                        <label for="incomeInput">รายรับ (Income):</label>
+                        <input type="number" id="incomeInput" placeholder="Enter amount">
+                    </div>
+                    <div class="form-group">
+                        <label for="noteInput">หมายเหตุ (Note):</label>
+                        <input type="text" id="noteInput" placeholder="Enter note">
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="cancel-btn" onclick="closeInputModal()">Cancel</button>
+                        <button type="submit" class="submit-btn">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <table id="transactionTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>จ่าย</th>
+                    <th>รายรับ</th>
+                    <th>คงเหลือ</th>
+                    <th>หมายเหตุ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Transactions will be dynamically added here -->
+            </tbody>
+        </table>
+    </div>
+
+<script>
+    // Function to handle button clicks and call Google Apps Script function
+    function handleButtonClick(buttonNumber) {
+        google.script.run
+            .withSuccessHandler((result) => {
+                alert(`Data recorded successfully: ${result}`);
+            })
+            .withFailureHandler((error) => {
+                alert(`Error: ${error.message}`);
+            })
+            .processButtonClick(buttonNumber);
+    }
+
+    // Function to load table data
+        function loadTable() {
+            const tbody = document.getElementById('transactionTable').querySelector('tbody');
+            tbody.innerHTML = '<tr><td colspan="5" class="loading">Loading...</td></tr>';
+
+            google.script.run
+                .withSuccessHandler((data) => {
+                    tbody.innerHTML = '';
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5">No data available</td></tr>';
+                        return;
+                    }
+
+                    data.forEach(row => {
+                        const newRow = document.createElement('tr');
+                        newRow.innerHTML = `
+                            <td>${row[0] || ''}</td>
+                            <td>${row[1] || ''}</td>
+                            <td>${row[2] || ''}</td>
+                            <td>${row[3] || ''}</td>
+                            <td>${row[4] || ''}</td>
+                        `;
+                        tbody.appendChild(newRow);
+                    });
+                })
+                .withFailureHandler((error) => {
+                    console.error('Error loading table:', error);
+                    tbody.innerHTML = '<tr><td colspan="5" class="error">Error loading data</td></tr>';
+                    showError(`Error loading table: ${error.message || 'Unknown error'}`);
+                })
+                .getTableData();
+        }
+
+    // Load table data when page loads
+    document.addEventListener('DOMContentLoaded', loadTable);
+
+    // Function to show input modal
+    function showInputModal() {
+        document.getElementById('inputModal').style.display = 'block';
+    }
+
+    // Function to close input modal
+    function closeInputModal() {
+        document.getElementById('inputModal').style.display = 'none';
+        document.getElementById('inputForm').reset();
+    }
+
+   // Handle form submission
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('inputForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const expense = document.getElementById('expenseInput').value;
+            const income = document.getElementById('incomeInput').value;
+            const note = document.getElementById('noteInput').value;
+            
+            // Call Google Apps Script function
+            google.script.run
+                .withSuccessHandler((result) => {
+                    alert(`Data recorded successfully: ${result}`);
+                    closeInputModal();
+                    loadTable(); // Reload table after submission
+                })
+                .withFailureHandler((error) => {
+                    alert(`Error: ${error.message}`);
+                })
+                .processCustomInput(expense, income, note);
+        });
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('inputModal');
+            if (event.target == modal) {
+                closeInputModal();
+            }
+        };
+    });
+</script>
+
+</body>
+</html>
