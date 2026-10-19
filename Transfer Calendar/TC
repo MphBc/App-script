@@ -1,0 +1,71 @@
+/**
+ * Copy เฉพาะอีเวนต์สีเขียว จากปฏิทินที่กำหนด -> ปฏิทินปลายทางที่กำหนด
+ * รองรับ: อีเวนต์มีเวลา, ทั้งวัน, หลายวัน | รันซ้ำได้ ไม่สร้างซ้ำ
+ * ดูผลที่ Execution log
+ */
+function copyGreenEvents() {
+  // ===== ตั้งค่า =====
+  const SOURCE_ID    = 'xxxxx@group.calendar.google.com';
+  const TARGET_ID    = 'xxx@group.calendar.google.com';
+  const GREEN_COLORS = ['10', '2'];               // 10 = Basil (เขียวเข้ม), 2 = Sage (เขียวอ่อน)
+  const START = new Date(2026, 0, 1);
+  const END   = new Date(2027, 11, 31);
+  // ===================
+
+  const src = CalendarApp.getCalendarById(SOURCE_ID);
+  const target = CalendarApp.getCalendarById(TARGET_ID);
+
+  if (!src)    { Logger.log('❌ ไม่พบปฏิทินต้นทาง หรือไม่มีสิทธิ์เข้าถึง'); return; }
+  if (!target) { Logger.log('❌ ไม่พบปฏิทินปลายทาง หรือไม่มีสิทธิ์เข้าถึง'); return; }
+
+  const existing = new Set(target.getEvents(START, END).map(e => makeKey(e)));
+
+  const greens = src.getEvents(START, END)
+    .filter(e => GREEN_COLORS.includes(e.getColor()));
+
+  let copied = 0, skipped = 0;
+
+  greens.forEach(e => {
+    const key = makeKey(e);
+    if (existing.has(key)) {
+      skipped++;
+      Logger.log('⏭ ข้าม: ' + e.getTitle());
+      return;
+    }
+
+    const options = { description: e.getDescription(), location: e.getLocation() };
+
+    if (e.isAllDayEvent()) {
+      target.createAllDayEvent(e.getTitle(), e.getAllDayStartDate(), e.getAllDayEndDate(), options);
+    } else {
+      target.createEvent(e.getTitle(), e.getStartTime(), e.getEndTime(), options);
+    }
+
+    existing.add(key);
+    copied++;
+    Logger.log('✅ Copy: ' + e.getTitle());
+  });
+
+  Logger.log('-----------------------------');
+  Logger.log('ต้นทาง: ' + src.getName());
+  Logger.log('ปลายทาง: ' + target.getName());
+  Logger.log('พบสีเขียว ' + greens.length + ' | Copy ' + copied + ' | ข้าม ' + skipped);
+}
+
+function makeKey(e) {
+  return e.getTitle() + '|' + e.getStartTime().getTime() + '|' + e.getEndTime().getTime();
+}
+
+/** ดูรายชื่อปฏิทินทั้งหมดพร้อม ID */
+function listCalendars() {
+  CalendarApp.getAllCalendars()
+    .forEach(c => Logger.log(c.getName() + '  →  ' + c.getId()));
+}
+
+/** ตรวจ colorId ของอีเวนต์ในปฏิทินต้นทาง (ใช้เมื่อ copy ได้ 0 รายการ) */
+function checkColors() {
+  const SOURCE_ID = 'ใส่รหัสปฏิทินต้นทาง';
+  CalendarApp.getCalendarById(SOURCE_ID)
+    .getEvents(new Date(2026, 9, 1), new Date(2026, 10, 1))
+    .forEach(e => Logger.log('[' + e.getColor() + '] ' + e.getTitle()));
+}
